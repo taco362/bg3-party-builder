@@ -11,21 +11,22 @@ interface Member {
 }
 
 interface PartyCardProps {
+  id: number;
   title: string;
   difficulty: string;
   meetTime: string;
-  maxPlayers: range;
+  maxPlayers: number;
   members: Member[];
+  onRefresh: () => void;
 }
 
-export default function PartyCard({ title, difficulty, meetTime, maxPlayers, members }: PartyCardProps) {
+export default function PartyCard({ id, title, difficulty, meetTime, maxPlayers, members = [], onRefresh }: PartyCardProps) {
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const currentPlayers = members.length;
   const isFull = currentPlayers >= maxPlayers;
 
-  // 난이도별 이쁜 아이보리톤 배지 색상 매칭
   const getDifficultyColor = (diff: string) => {
-    switch (diff.toLowerCase()) {
+    switch (diff?.toLowerCase()) {
       case 'honour': return 'bg-[#F2DEDE] text-[#A94442] border-[#EBCCD1]';
       case 'tactician': return 'bg-[#FCF8E3] text-[#8A6D3B] border-[#FAEBCC]';
       default: return 'bg-[#D9EDF7] text-[#31708F] border-[#BCE8F1]';
@@ -50,7 +51,7 @@ export default function PartyCard({ title, difficulty, meetTime, maxPlayers, mem
         <div className="space-y-2 mb-6">
           <p className="text-xs font-semibold text-[#6B6155]">현재 구성원:</p>
           <div className="flex flex-wrap gap-1.5">
-            {members.map((member, index) => (
+            {members && members.map((member, index) => (
               <div key={index} className={`text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 border ${member.isLeader ? 'bg-[#FDFBF7] border-[#DED9CF] text-[#4A443C]' : 'bg-[#FAF8F5] border-[#EFECE6] text-[#6B6155]'}`}>
                 {member.isLeader && <span className="text-[10px]">👑</span>}
                 <span className="font-semibold">{member.name}</span>
@@ -65,7 +66,7 @@ export default function PartyCard({ title, difficulty, meetTime, maxPlayers, mem
         {isFull ? '모집 완료' : '파티 참가 신청'}
       </button>
 
-      <JoinPartyModal isOpen={isJoinOpen} onClose={() => setIsJoinOpen(false)} partyTitle={title} />
+      <JoinPartyModal isOpen={isJoinOpen} onClose={() => setIsJoinOpen(false)} partyId={id} partyTitle={title} onRefresh={onRefresh} />
     </div>
   );
 }

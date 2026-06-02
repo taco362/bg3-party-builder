@@ -5,9 +5,10 @@ import React, { useState } from 'react';
 interface CreatePartyModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onRefresh: () => void;
 }
 
-export default function CreatePartyModal({ isOpen, onClose }: CreatePartyModalProps) {
+export default function CreatePartyModal({ isOpen, onClose, onRefresh }: CreatePartyModalProps) {
   const [title, setTitle] = useState('');
   const [difficulty, setDifficulty] = useState('Balanced');
   const [maxPlayers, setMaxPlayers] = useState(4);
@@ -16,13 +17,33 @@ export default function CreatePartyModal({ isOpen, onClose }: CreatePartyModalPr
   const [leaderRace, setLeaderRace] = useState('Human');
   const [leaderClass, setLeaderClass] = useState('Fighter');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('가짜 데이터 모드: 방이 생성되었습니다! (나중에 DB 연동 예정)');
-    onClose();
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/parties', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title, difficulty, maxPlayers, meetTime, password, leaderName, leaderRace, leaderClass
+        }),
+      });
+
+      if (!res.ok) throw new Error('방 생성 실패');
+
+      alert('👑 방 생성 및 방장 자동 참가 완료!');
+      onRefresh(); // 메인 화면 리스트 새로고침
+      onClose();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -91,8 +112,10 @@ export default function CreatePartyModal({ isOpen, onClose }: CreatePartyModalPr
           </div>
 
           <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-[#EFECE6] text-[#6B6155] font-medium hover:bg-[#E5E0D8] transition-colors">취소</button>
-            <button type="submit" className="flex-1 py-2.5 rounded-xl bg-[#8A7A65] text-white font-medium hover:bg-[#766754] transition-colors shadow-sm">생성하기</button>
+            <button type="button" onClick={onClose} disabled={loading} className="flex-1 py-2.5 rounded-xl bg-[#EFECE6] text-[#6B6155] font-medium hover:bg-[#E5E0D8] transition-colors">취소</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-xl bg-[#8A7A65] text-white font-medium hover:bg-[#766754] transition-colors shadow-sm disabled:opacity-50">
+              {loading ? '생성 중...' : '생성하기'}
+            </button>
           </div>
         </form>
       </div>

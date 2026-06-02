@@ -1,45 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PartyCard from './components/PartyCard';
 import CreatePartyModal from './components/CreatePartyModal';
 
-// 교수님 채점 및 시각화용 하드코딩 Mock Data (방장 1명 자동포함 룰 반영)
-const INITIAL_MOCK_DATA = [
-  {
-    title: "발더스3 명예 난이도 Act 1 같이 깨실 굳전사 구함",
-    difficulty: "Honour",
-    meetTime: "2026-06-05T20:00",
-    maxPlayers: 4,
-    members: [
-      { name: "Taco방장", race: "Githyanki", class: "Fighter", isLeader: true },
-      { name: "새도우하트러버", race: "Elf", class: "Cleric" },
-    ]
-  },
-  {
-    title: "언더다크 탐험 전술가 파티 모집 (바드 환영)",
-    difficulty: "Tactician",
-    meetTime: "2026-06-06T14:00",
-    maxPlayers: 4,
-    members: [
-      { name: "게일은내친구", race: "Human", class: "Wizard", isLeader: true },
-    ]
-  },
-  {
-    title: "액트3 마지막 보스 레이드 달릴 분들 컴온",
-    difficulty: "Balanced",
-    meetTime: "2026-06-07T19:30",
-    maxPlayers: 3,
-    members: [
-      { name: "아스타리온킹", race: "Elf", class: "Rogue", isLeader: true },
-      { name: "바드장인", race: "Human", class: "Bard" },
-      { name: "강한팔라딘", race: "Dwarf", class: "Paladin" },
-    ]
-  }
-];
-
 export default function Home() {
+  const [parties, setParties] = useState<any[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // DB 실시간 데이터 바인딩 함수
+  const fetchParties = async () => {
+    try {
+      const res = await fetch('/api/parties');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setParties(data);
+      }
+    } catch (err) {
+      console.error("데이터 로드 실패:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchParties();
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#F7F4EF] text-[#4A443C] p-6 md:p-12">
@@ -59,17 +46,36 @@ export default function Home() {
         {/* 파티 리스트 보드 영역 */}
         <section>
           <h2 className="text-xl font-bold text-[#6B6155] mb-4">현재 모집 중인 파티 목록</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {INITIAL_MOCK_DATA.map((party, index) => (
-              <PartyCard key={index} title={party.title} difficulty={party.difficulty} meetTime={party.meetTime} maxPlayers={party.maxPlayers} members={party.members} />
-            ))}
-          </div>
+          
+          {loading ? (
+            <p className="text-center py-10 text-[#9C9284]">데이터베이스 연결 중...</p>
+          ) : parties.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-[#EFECE6] p-8">
+              <p className="text-[#9C9284] mb-2">개설된 파티 모집 세션이 없습니다.</p>
+              <p className="text-xs text-[#AFA493]">우측 상단의 버튼을 눌러 첫 번째 파티를 개설해 보세요!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {parties.map((party) => (
+                <PartyCard 
+                  key={party.id}
+                  id={party.id}
+                  title={party.title} 
+                  difficulty={party.difficulty} 
+                  meetTime={party.meet_time} 
+                  maxPlayers={party.max_players} 
+                  members={party.members}
+                  onRefresh={fetchParties}
+                />
+              ))}
+            </div>
+          )}
         </section>
 
       </div>
 
       {/* 방 만들기 팝업 모달 */}
-      <CreatePartyModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+      <CreatePartyModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} onRefresh={fetchParties} />
     </main>
   );
 }
