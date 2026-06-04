@@ -36,7 +36,7 @@ export default function Home() {
         <header className="flex flex-col sm:flex-row items-center justify-between border-b border-[#EFECE6] pb-6 mb-10 gap-4">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-[#4A443C]">🎲 BG3 Party Builder</h1>
-            <p className="text-sm text-[#9C9284] mt-1">발더스 게이트 3 캠페인을 함께할 완벽한 파티원을 매칭하세요.</p>
+            <p className="text-sm text-[#9C9284] mt-1">발더스 게이트 3을 함께할 완벽한 파티원을 매칭하세요.</p>
           </div>
           <button onClick={() => setIsCreateOpen(true)} className="px-5 py-2.5 bg-[#8A7A65] text-white font-semibold rounded-xl shadow-sm hover:bg-[#766754] transition-colors text-sm">
             ➕ 파티 모집 생성
